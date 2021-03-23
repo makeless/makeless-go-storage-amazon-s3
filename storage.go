@@ -32,18 +32,18 @@ func (storage *Storage) GetConfig() aws.Config {
 	return storage.Config
 }
 
+func (storage *Storage) GetSession() *session.Session {
+	storage.RLock()
+	defer storage.RUnlock()
+
+	return storage.session
+}
+
 func (storage *Storage) setSession(session *session.Session) {
 	storage.Lock()
 	defer storage.Unlock()
 
 	storage.session = session
-}
-
-func (storage *Storage) getSession() *session.Session {
-	storage.RLock()
-	defer storage.RUnlock()
-
-	return storage.session
 }
 
 func (storage *Storage) Init() error {
@@ -56,7 +56,7 @@ func (storage *Storage) Init() error {
 }
 
 func (storage *Storage) Write(filepath string, data []byte) error {
-	var uploader = s3manager.NewUploader(storage.getSession())
+	var uploader = s3manager.NewUploader(storage.GetSession())
 
 	if _, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(storage.GetBucket()),
@@ -70,7 +70,7 @@ func (storage *Storage) Write(filepath string, data []byte) error {
 }
 
 func (storage *Storage) Read(filepath string) ([]byte, error) {
-	var downloader = s3manager.NewDownloader(storage.getSession())
+	var downloader = s3manager.NewDownloader(storage.GetSession())
 	var buf = new(aws.WriteAtBuffer)
 
 	if _, err := downloader.Download(
