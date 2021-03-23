@@ -2,6 +2,7 @@ package makeless_go_storage_amazon_s3
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -86,9 +87,9 @@ func (storage *Storage) Read(filepath string) ([]byte, error) {
 }
 
 func (storage *Storage) Exists(filepath string) (bool, error) {
-	return true, nil
+	return false, fmt.Errorf("exists not supported yet")
 }
 
 func (storage *Storage) Remove(filepath string) error {
-	return nil
+	return fmt.Errorf("remove not supported yet")
 }
