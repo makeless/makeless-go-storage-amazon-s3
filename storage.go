@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -87,7 +88,25 @@ func (storage *Storage) Read(filepath string) ([]byte, error) {
 }
 
 func (storage *Storage) Exists(filepath string) (bool, error) {
-	return false, fmt.Errorf("exists not supported yet")
+	_, err := s3.New(storage.GetSession()).HeadObject(&s3.HeadObjectInput{
+		Bucket: aws.String(storage.GetBucket()),
+		Key:    aws.String(filepath),
+	})
+
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case "NotFound":
+				return false, nil
+			default:
+				return false, err
+			}
+		}
+
+		return false, err
+	}
+
+	return true, nil
 }
 
 func (storage *Storage) Remove(filepath string) error {
