@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/h2non/filetype"
 	"sync"
 )
 
@@ -59,10 +60,17 @@ func (storage *Storage) Init() error {
 func (storage *Storage) Write(filepath string, data []byte) error {
 	var uploader = s3manager.NewUploader(storage.GetSession())
 
+	fileType, _ := filetype.Match(data)
+
+	if fileType == filetype.Unknown {
+		return fmt.Errorf("unknown file type")
+	}
+
 	if _, err := uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(storage.GetBucket()),
-		Key:    aws.String(filepath),
-		Body:   bytes.NewReader(data),
+		Bucket:      aws.String(storage.GetBucket()),
+		Key:         aws.String(filepath),
+		Body:        bytes.NewReader(data),
+		ContentType: aws.String(fileType.MIME.Value),
 	}); err != nil {
 		return err
 	}
